@@ -1,5 +1,5 @@
 import { Plugin, MarkdownView, Notice, PluginSettingTab, Setting } from 'obsidian';
-
+const micromatch = require('micromatch');
 
 interface ForceReadModePluginSettings {
     targetFolderPaths: string[];  // Array of folder paths
@@ -70,7 +70,7 @@ export default class ForceReadModePlugin extends Plugin {
             }
         
             // Check if the file is within any of the target folders or their subfolders
-            const isInTargetFolder = this.settings.targetFolderPaths.some(path => file.path.startsWith(path));
+            const isInTargetFolder = this.settings.targetFolderPaths.some(path =>micromatch.isMatch(file.path, path));
             
             if (!isInTargetFolder) {
                 return;
@@ -110,15 +110,17 @@ class ForceReadModeSettingTab extends PluginSettingTab {
 
         // Add a setting for folder paths
         new Setting(containerEl)
-            .setName('Target folder paths')
-            .setDesc('Specify the folder paths where markdown files should always open in read mode.')
+            .setName('Target paths')
+            .setDesc('Markdown files opened from these paths will always open in read mode. Use one glob pattern per line.')
             .addTextArea(text => text
-                .setPlaceholder('Enter folder paths, one per line')
+                .setPlaceholder('Examples:\nNotes/**\nProjects/*/*.md\n**/Readme.md')
                 .setValue(this.plugin.settings.targetFolderPaths.join('\n'))
                 .onChange(async (value) => {
                     // Update the settings with the new folder paths
                     this.plugin.settings.targetFolderPaths = value.split('\n').map(path => path.trim()).filter(path => path.length > 0);
                     await this.plugin.saveSettings();
-                }));
+                }
+            )
+        );
     }
 }

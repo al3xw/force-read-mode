@@ -1,5 +1,5 @@
 import { Plugin, MarkdownView, Notice, PluginSettingTab, Setting } from 'obsidian';
-const micromatch = require('micromatch');
+import * as micromatch from "micromatch";
 
 interface ForceReadModePluginSettings {
     targetFolderPaths: string[];  // Array of folder paths

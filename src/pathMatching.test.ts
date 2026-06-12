@@ -1,4 +1,4 @@
-const micromatch = require('micromatch');
+import * as micromatch from "micromatch";
 
 // Mirrors the parsing logic in ForceReadModeSettingTab.display() onChange handler.
 function parsePatterns(rawInput: string): string[] {

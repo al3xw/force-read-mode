@@ -1,4 +1,4 @@
-import { Plugin, MarkdownView, Notice, PluginSettingTab, Setting } from 'obsidian';
+import { Plugin, MarkdownView, Notice, PluginSettingTab, Setting, WorkspaceLeaf } from 'obsidian';
 import { parsePatterns, matchesAnyPattern } from './src/pathMatching';
 
 interface ForceReadModePluginSettings {
@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS: ForceReadModePluginSettings = {
 export default class ForceReadModePlugin extends Plugin {
     settings: ForceReadModePluginSettings;
     isEnabled: boolean = true;
+    private forcedLeaves = new WeakSet<WorkspaceLeaf>();
 
     // Plugin initialization
     async onload() {
@@ -73,8 +74,21 @@ export default class ForceReadModePlugin extends Plugin {
             const isInTargetFolder = matchesAnyPattern(file.path, this.settings.targetFolderPaths);
 
             if (!isInTargetFolder) {
+                // If this leaf isn't one we forced, leave it alone entirely — it's
+                // already in whatever mode Obsidian's own defaults put it in.
+                if (this.forcedLeaves.has(leaf)) {
+                    this.forcedLeaves.delete(leaf);
+                    // Return to Obsidian's standard editing mode, since this file
+                    // was never meant to be forced into preview.
+                    leaf.setViewState({
+                        ...leaf.getViewState(),
+                        state: { mode: 'source' }
+                    });
+                }
                 return;
             }
+
+            this.forcedLeaves.add(leaf);
 
             // Force the view into preview (read mode)
             leaf.setViewState({

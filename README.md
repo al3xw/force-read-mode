@@ -5,7 +5,7 @@
 ## Features
 - Automatically forces read mode when opening Markdown files from specified folders.
 - Supports multiple folder patterns.
-- Uses powerful micromatch glob syntax.
+- Simple glob syntax: `**` for any folder depth, `*` within a single folder level, everything else matched literally (no escaping needed, even for parentheses).
 - Simple and lightweight.
 - Quickly enable or disable via the Command Palette.
 - No impact on files outside the configured folders.
@@ -23,7 +23,7 @@
 2. Enable the plugin from **Settings → Community Plugins**.
 3. Open **Settings → Force Read Mode** to configure:
    - Add a pattern for files you want to open in read mode (one pattern per line).
-   - Patterns use micromatch syntax.
+   - `**` matches any number of folders, `*` matches within a single folder level, and everything else is matched literally.
    - Examples:
       - `Notes/**` — all files under the `Notes` folder (any depth).
       - `Projects/*/*.md` — Markdown files directly inside a subfolder of `Projects`.

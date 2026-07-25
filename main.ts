@@ -1,5 +1,5 @@
 import { Plugin, MarkdownView, Notice, PluginSettingTab, Setting } from 'obsidian';
-import * as micromatch from "micromatch";
+import { parsePatterns, matchesAnyPattern } from './src/pathMatching';
 
 interface ForceReadModePluginSettings {
     targetFolderPaths: string[];  // Array of folder paths
@@ -70,18 +70,18 @@ export default class ForceReadModePlugin extends Plugin {
             }
         
             // Check if the file is within any of the target folders or their subfolders
-            const isInTargetFolder = this.settings.targetFolderPaths.some(path =>micromatch.isMatch(file.path, path));
-            
+            const isInTargetFolder = matchesAnyPattern(file.path, this.settings.targetFolderPaths);
+
             if (!isInTargetFolder) {
                 return;
             }
-        
+
             // Force the view into preview (read mode)
             leaf.setViewState({
                 ...leaf.getViewState(),
                 state: { mode: 'preview' } // Force preview (read mode)
             });
-        });        
+        });
     }
 
     // Load settings
@@ -117,7 +117,7 @@ class ForceReadModeSettingTab extends PluginSettingTab {
                 .setValue(this.plugin.settings.targetFolderPaths.join('\n'))
                 .onChange(async (value) => {
                     // Update the settings with the new folder paths
-                    this.plugin.settings.targetFolderPaths = value.split('\n').map(path => path.trim()).filter(path => path.length > 0);
+                    this.plugin.settings.targetFolderPaths = parsePatterns(value);
                     await this.plugin.saveSettings();
                 }
             )

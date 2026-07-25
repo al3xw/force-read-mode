@@ -1,13 +1,7 @@
-import * as micromatch from "micromatch";
+import { parsePatterns, matchesAnyPattern } from './pathMatching';
 
-// Mirrors the parsing logic in ForceReadModeSettingTab.display() onChange handler.
-function parsePatterns(rawInput: string): string[] {
-  return rawInput.split('\n').map((p: string) => p.trim()).filter((p: string) => p.length > 0);
-}
-
-// Mirrors the match check in onLayoutChange.
 function isMatch(filePath: string, patterns: string[]): boolean {
-  return patterns.some((pattern: string) => micromatch.isMatch(filePath, pattern));
+  return matchesAnyPattern(filePath, patterns);
 }
 
 describe('pattern parsing', () => {
@@ -75,24 +69,18 @@ describe('path matching', () => {
   });
 
   describe('paths with parentheses', () => {
-    // Parentheses are extglob syntax in micromatch, so literal parens in a
-    // folder name require escaping or a wildcard workaround.
+    // Parentheses are always literal here — no escaping or workarounds needed.
 
-    test('unescaped parens in pattern do NOT match literally', () => {
-      // (v2) is parsed as an extglob group rather than literal characters.
-      expect(isMatch('Archive/Project (v2)/note.md', ['Archive/Project (v2)/**'])).toBe(false);
+    test('parens in pattern match the literal folder name', () => {
+      expect(isMatch('Archive/Project (v2)/note.md', ['Archive/Project (v2)/**'])).toBe(true);
     });
 
-    test('escaped parens match the literal folder name', () => {
-      expect(isMatch('Archive/Project (v2)/note.md', ['Archive/Project \\(v2\\)/**'])).toBe(true);
+    test('parens do not match a differently-named folder', () => {
+      expect(isMatch('Archive/Project (v3)/note.md', ['Archive/Project (v2)/**'])).toBe(false);
     });
 
-    test('wildcard workaround matches folder with parens', () => {
+    test('wildcard also matches a folder with parens', () => {
       expect(isMatch('Archive/Project (v2)/note.md', ['Archive/Project*/**'])).toBe(true);
-    });
-
-    test('bracket syntax workaround matches literal parens', () => {
-      expect(isMatch('Archive/Project (v2)/note.md', ['Archive/Project [(]v2[)]/**'])).toBe(true);
     });
   });
 
